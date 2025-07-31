@@ -510,7 +510,7 @@ body::before {
     grid-template-columns: 1fr;
     gap: 15px;
   }
-  
+
   .form-row {
     grid-template-columns: 1fr;
     gap: 15px;
@@ -522,29 +522,29 @@ body::before {
     grid-template-columns: 1fr;
     padding: 20px;
   }
-  
+
   .header {
     padding: 30px 20px;
   }
-  
+
   .header h1 {
     font-size: 2.2em;
   }
-  
+
   .main-content,
   .office-section {
     padding: 25px 20px;
   }
-  
+
   .team-actions {
     flex-direction: column;
     gap: 8px;
   }
-  
+
   .edit-form {
     grid-template-columns: 1fr;
   }
-  
+
   .section-header {
     flex-direction: column;
     align-items: flex-start;
@@ -555,15 +555,15 @@ body::before {
   body {
     padding: 10px;
   }
-  
+
   .container {
     border-radius: 16px;
   }
-  
+
   .stat-number {
     font-size: 2.5em;
   }
-  
+
   .section-title {
     font-size: 1.8em;
   }
@@ -644,4 +644,174 @@ body::before {
 
 .notification.show {
   transform: translateX(0);
+}
+
+/* Estilos del Modal (ventana emergente) */
+.modal {
+  display: none; /* Oculto por defecto */
+  position: fixed; /* Posición fija */
+  z-index: 1000; /* Z-index alto para que esté por encima de todo */
+  left: 0;
+  top: 0;
+  width: 100%; /* Ancho completo */
+  height: 100%; /* Alto completo */
+  overflow: auto; /* Habilitar scroll si el contenido es demasiado grande */
+  background-color: rgba(0,0,0,0.6); /* Fondo semi-transparente negro */
+  backdrop-filter: blur(5px); /* Efecto de desenfoque */
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.modal-content {
+  background: linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.95) 100%);
+  margin: auto;
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+  max-width: 600px;
+  width: 90%;
+  position: relative;
+  border: 1px solid rgba(255,255,255,0.4);
+  animation: fadeInScale 0.3s ease-out;
+  overflow: hidden;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.modal-content::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: linear-gradient(90deg, #667eea, #f093fb);
+  border-radius: 20px 20px 0 0;
+}
+
+.close-button {
+  color: #aaa;
+  float: right;
+  font-size: 36px;
+  font-weight: bold;
+  position: absolute;
+  top: 5px;
+  right: 10px;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.close-button:hover,
+.close-button:focus {
+  color: #ef4444;
+  text-decoration: none;
+}
+
+#modalTeamName {
+  font-size: 2em;
+  color: #2d3748;
+  font-weight: 700;
+  margin-bottom: 25px;
+  text-align: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.member-list {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 20px;
+  background-color: rgba(255,255,255,0.7);
+}
+
+.member-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  margin-bottom: 8px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  transition: all 0.2s ease;
+}
+
+.member-item:hover {
+  background: #e9ecef;
+  transform: translateY(-2px);
+}
+
+.member-item:last-child {
+  margin-bottom: 0;
+}
+
+.member-name {
+  font-size: 1.1em;
+  color: #333;
+  font-weight: 500;
+  flex-grow: 1;
+}
+
+.member-input {
+  flex-grow: 1;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1em;
+  margin-right: 10px;
+}
+
+.member-actions .btn {
+  padding: 6px 12px;
+  font-size: 0.85em;
+  margin-left: 5px;
+  box-shadow: none; /* Eliminar sombra extra */
+}
+
+.add-member-form {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px dashed #e2e8f0;
+}
+
+.add-member-form .inline-input {
+  flex-grow: 1;
+}
+
+.btn-add-member {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  box-shadow: 0 6px 15px rgba(59, 130, 246, 0.3);
+  padding: 12px 20px;
+  font-size: 1em;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px dashed #e2e8f0;
+}
+
+/* Hacer que el modal sea un flex container para centrar su contenido */
+.modal.show-modal {
+    display: flex;
 }

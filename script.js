@@ -17,6 +17,8 @@ let appConfig = {
   }
 };
 
+let currentTeamIdForMembers = null; // Para saber qué equipo estamos editando en el modal de miembros
+
 function init() {
   loadFromStorage();
   updateCurrentDate();
@@ -27,6 +29,14 @@ function init() {
   document.getElementById('equipoForm').addEventListener('submit', function(e) {
     e.preventDefault();
     addTeam();
+  });
+
+  // Listener para cerrar el modal al hacer clic fuera del contenido
+  window.addEventListener('click', function(event) {
+    const modal = document.getElementById('membersModal');
+    if (event.target == modal) {
+      closeMembersModal();
+    }
   });
 
   setInterval(updateCurrentDate, 60000);
@@ -59,7 +69,8 @@ function addTeam() {
     name,
     size,
     daysPerWeek: Math.random() < 0.5 ? 2 : 3,
-    assignedDays: []
+    assignedDays: [],
+    members: [] // Nuevo: Propiedad para los integrantes del equipo
   };
 
   appConfig.teams.push(team);
@@ -84,6 +95,7 @@ function deleteTeam(id) {
 }
 
 function editTeam(id) {
+  // Esta función ahora solo abre/cierra el formulario de edición básico del equipo
   document.querySelector(`#edit-form-${id}`).classList.toggle('active');
   document.querySelector(`#team-card-${id}`).classList.toggle('editing');
 }
@@ -147,21 +159,21 @@ function renderTeamsList() {
   container.innerHTML = appConfig.teams.length === 0
     ? '<p style="text-align:center;">📝 No hay equipos registrados</p>'
     : appConfig.teams.map(team => `
-      <div class="team-card" id="team-card-${team.id}">
-        <div class="team-header">
+      <div class="team-card" id="team-card-${team.id}" onclick="openMembersModal(${team.id})"> <div class="team-header">
           <div class="team-info">
             <div class="team-name">👥 ${team.name}</div>
             <div class="team-details">
               ${team.size} personas • ${team.daysPerWeek} días<br>
               📅 ${team.assignedDays.map(d => DAY_NAMES[d]).join(', ') || 'Sin asignar'}
-            </div>
+              <br>
+              Miembros: ${team.members.length} / ${team.size} </div>
           </div>
           <div class="team-actions">
-            <button class="btn btn-edit" onclick="editTeam(${team.id})">✏️ Editar</button>
-            <button class="btn btn-delete" onclick="deleteTeam(${team.id})">🗑️ Eliminar</button>
+            <button class="btn btn-edit" onclick="event.stopPropagation(); editTeam(${team.id});">✏️ Editar</button>
+            <button class="btn btn-delete" onclick="event.stopPropagation(); deleteTeam(${team.id});">🗑️ Eliminar</button>
           </div>
         </div>
-        <div class="edit-form" id="edit-form-${team.id}">
+        <div class="edit-form" id="edit-form-${team.id}" onclick="event.stopPropagation();">
           <input type="text" id="edit-name-${team.id}" value="${team.name}" class="inline-input">
           <input type="number" id="edit-size-${team.id}" value="${team.size}" min="1" max="${appConfig.dailyCapacity}" class="inline-input">
           <input type="number" id="edit-days-${team.id}" value="${team.daysPerWeek}" min="1" max="5" class="inline-input">
@@ -196,11 +208,15 @@ function renderWeekSchedule() {
 
 function updateStats() {
   document.getElementById('totalTeams').textContent = appConfig.teams.length;
+  // Suma total de personas incluyendo las de todos los equipos
   document.getElementById('totalPeople').textContent = appConfig.teams.reduce((sum, t) => sum + t.size, 0);
 
   const todayIndex = new Date().getDay();
-  const dayKey = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'][todayIndex];
-  const todayTotal = appConfig.weekSchedule[dayKey]?.reduce((sum, t) => sum + t.size, 0) || 0;
+  // Ajuste para mapear Sunday (0) a Saturday (6) a las claves de DAYS.
+  // Si es domingo (0) o sábado (6), no hay asignación de equipo en el cronograma.
+  const dayKey = (todayIndex === 0 || todayIndex === 6) ? null : DAYS[todayIndex - 1]; // Lunes es 1, Viernes es 5
+
+  const todayTotal = dayKey ? appConfig.weekSchedule[dayKey]?.reduce((sum, t) => sum + t.size, 0) || 0 : 0;
   document.getElementById('todayOccupancy').textContent = todayTotal;
   document.getElementById('dailyCapacity').textContent = appConfig.dailyCapacity;
 }
@@ -213,6 +229,12 @@ function loadFromStorage() {
   const data = localStorage.getItem('flyrAppData');
   if (data) {
     appConfig = JSON.parse(data);
+    // Asegurar que la propiedad 'members' existe en equipos antiguos al cargar
+    appConfig.teams.forEach(team => {
+      if (!team.members) {
+        team.members = [];
+      }
+    });
   }
 }
 
@@ -243,4 +265,133 @@ function showNotification(message, type = 'info') {
   }, 3000);
 }
 
+// --- Funciones del Modal de Integrantes ---
 
+function openMembersModal(teamId) {
+  const team = appConfig.teams.find(t => t.id === teamId);
+  if (!team) return;
+
+  currentTeamIdForMembers = teamId;
+  document.getElementById('modalTeamName').textContent = `Integrantes de "${team.name}"`;
+  renderMembersList(team.members);
+  document.getElementById('membersModal').classList.add('show-modal');
+}
+
+function closeMembersModal() {
+  document.getElementById('membersModal').classList.remove('show-modal');
+  currentTeamIdForMembers = null; // Reiniciar el ID del equipo actual
+  // Volver a renderizar la lista de equipos para actualizar el contador de miembros
+  renderTeamsList();
+}
+
+function renderMembersList(members) {
+  const memberListDiv = document.getElementById('memberList');
+  memberListDiv.innerHTML = members.length === 0
+    ? '<p style="text-align:center;color:#999;">No hay integrantes en este equipo.</p>'
+    : members.map(member => `
+      <div class="member-item" id="member-item-${member.id}">
+        <span class="member-name" id="member-name-display-${member.id}">${member.name}</span>
+        <input type="text" id="member-name-edit-${member.id}" value="${member.name}" class="member-input" style="display:none;">
+        <div class="member-actions">
+          <button class="btn btn-edit" onclick="toggleMemberEdit(${member.id})">✏️ Editar</button>
+          <button class="btn btn-save" id="save-member-btn-${member.id}" onclick="saveMemberEdit(${member.id})" style="display:none;">💾 Guardar</button>
+          <button class="btn btn-delete" onclick="deleteMemberFromTeam(${member.id})">🗑️ Eliminar</button>
+        </div>
+      </div>
+    `).join('');
+}
+
+function addMemberToTeam() {
+  const team = appConfig.teams.find(t => t.id === currentTeamIdForMembers);
+  if (!team) return;
+
+  const newMemberNameInput = document.getElementById('newMemberName');
+  const name = newMemberNameInput.value.trim();
+
+  if (!name) {
+    alert('⚠️ Ingresa un nombre para el integrante.');
+    return;
+  }
+  if (team.members.length >= team.size) {
+    alert(`⚠️ El equipo ya tiene el número máximo de integrantes (${team.size}).`);
+    return;
+  }
+
+  const newMember = {
+    id: Date.now(),
+    name: name
+  };
+
+  team.members.push(newMember);
+  saveToStorage();
+  renderMembersList(team.members);
+  newMemberNameInput.value = ''; // Limpiar el campo
+  showNotification('✅ Integrante agregado', 'success');
+  updateStats(); // Actualizar el conteo de personas si 'totalPeople' considera miembros.
+  renderTeamsList(); // Para actualizar el conteo de miembros en la tarjeta del equipo.
+}
+
+function deleteMemberFromTeam(memberId) {
+  const team = appConfig.teams.find(t => t.id === currentTeamIdForMembers);
+  if (!team) return;
+
+  if (confirm('¿Eliminar a este integrante?')) {
+    team.members = team.members.filter(m => m.id !== memberId);
+    saveToStorage();
+    renderMembersList(team.members);
+    showNotification('🗑️ Integrante eliminado', 'info');
+    updateStats();
+    renderTeamsList();
+  }
+}
+
+function toggleMemberEdit(memberId) {
+  const displaySpan = document.getElementById(`member-name-display-${memberId}`);
+  const editInput = document.getElementById(`member-name-edit-${memberId}`);
+  const editButton = document.querySelector(`#member-item-${memberId} .btn-edit`);
+  const saveButton = document.getElementById(`save-member-btn-${memberId}`);
+
+  if (displaySpan.style.display === 'none') {
+    // Modo visualización
+    displaySpan.style.display = 'inline-block';
+    editInput.style.display = 'none';
+    editButton.textContent = '✏️ Editar';
+    saveButton.style.display = 'none';
+  } else {
+    // Modo edición
+    displaySpan.style.display = 'none';
+    editInput.style.display = 'inline-block';
+    editInput.focus();
+    editButton.textContent = '❌ Cancelar'; // Cambiar a cancelar si estás en modo edición
+    saveButton.style.display = 'inline-block';
+  }
+}
+
+function saveMemberEdit(memberId) {
+  const team = appConfig.teams.find(t => t.id === currentTeamIdForMembers);
+  if (!team) return;
+
+  const member = team.members.find(m => m.id === memberId);
+  if (!member) return;
+
+  const newName = document.getElementById(`member-name-edit-${memberId}`).value.trim();
+
+  if (!newName) {
+    alert('⚠️ El nombre del integrante no puede estar vacío.');
+    return;
+  }
+
+  member.name = newName;
+  saveToStorage();
+  renderMembersList(team.members); // Vuelve a renderizar la lista para mostrar el cambio
+  showNotification('✏️ Integrante actualizado', 'success');
+}
+
+function saveMembersChanges() {
+  // Esta función es más bien para confirmar que los cambios en el modal se persisten,
+  // aunque ya se están guardando con cada add/edit/delete individual.
+  // Podría usarse para una lógica de "Guardar todo al cerrar" si se prefiere.
+  saveToStorage(); // Asegurar que todo esté guardado
+  showNotification('💾 Cambios de integrantes guardados', 'success');
+  closeMembersModal();
+}

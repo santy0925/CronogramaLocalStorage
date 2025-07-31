@@ -33,7 +33,6 @@
     </div>
 
     <div class="main-content">
-      <!-- Configuración -->
       <div class="office-section">
         <div class="section-header">
           <h2 class="section-title">Configuración</h2>
@@ -59,7 +58,6 @@
         </form>
       </div>
 
-      <!-- Distribución Semanal -->
       <div class="office-section">
         <div class="section-header">
           <h2 class="section-title">Distribución</h2>
@@ -68,7 +66,6 @@
         <div class="week-schedule" id="weekSchedule"></div>
       </div>
 
-      <!-- Equipos Registrados -->
       <div class="office-section">
         <div class="section-header">
           <h2 class="section-title">Equipos Registrados</h2>
@@ -77,6 +74,24 @@
       </div>
     </div>
   </div>
+
+  <div id="membersModal" class="modal">
+    <div class="modal-content">
+      <span class="close-button" onclick="closeMembersModal()">&times;</span>
+      <h2 id="modalTeamName">Integrantes del Equipo</h2>
+      <div class="member-list" id="memberList">
+        </div>
+      <div class="add-member-form">
+        <input type="text" id="newMemberName" placeholder="Nombre del integrante" class="inline-input">
+        <button class="btn btn-add-member" onclick="addMemberToTeam()">➕ Agregar Integrante</button>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-save" onclick="saveMembersChanges()">💾 Guardar Cambios</button>
+        <button class="btn btn-cancel" onclick="closeMembersModal()">✖️ Cerrar</button>
+      </div>
+    </div>
+  </div>
+
   <script src="script.js"></script>
 </body>
 </html>
